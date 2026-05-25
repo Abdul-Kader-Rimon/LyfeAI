@@ -21,43 +21,51 @@ export async function GET() {
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-  // Last 14 দিনের data collect করো
   const [habits, logs, moods] = await Promise.all([
     Habit.find({ userId }),
     HabitLog.find({ userId, completedAt: { $gte: fourteenDaysAgo } }),
     MoodEntry.find({ userId, createdAt: { $gte: fourteenDaysAgo } }),
   ]);
 
+  const avgMood = moods.length
+    ? (moods.reduce((a, m) => a + m.score, 0) / moods.length).toFixed(1)
+    : "N/A";
+
   const prompt = `
-You are a wellness coach. Analyze this user's habit and mood patterns.
+You are a wellness coach. Analyze this user's habit and mood data.
 
-Habits tracked: ${habits.map((h) => h.name).join(", ")}
+Habits tracked: ${habits.map((h) => h.name).join(", ") || "None yet"}
+Total habit completions (last 14 days): ${logs.length}
+Mood scores (1-10): ${moods.map((m) => m.score).join(", ") || "None yet"}
+Average mood: ${avgMood}
 
-Last 14 days habit completions: ${logs.length} total logs
-Mood entries (1-10 scale): ${moods.map((m) => `${m.score}/10`).join(", ")}
-Average mood: ${(moods.reduce((a, m) => a + m.score, 0) / (moods.length || 1)).toFixed(1)}
-
-Respond ONLY with this JSON (no extra text):
+Respond ONLY with this JSON (no extra text, no markdown):
 {
   "predictedMood": 7,
   "trend": "improving",
-  "insight": "One specific observation about their pattern",
+  "insight": "One specific observation about their pattern in 1-2 sentences",
   "topSuggestion": "One actionable tip for tomorrow",
-  "streakRisk": "Which habit they might miss tomorrow"
+  "streakRisk": "Which habit they might miss or none"
 }`;
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    messages: [{ role: "user", content: prompt }],
-    max_tokens: 300,
-  });
-
-  const raw = completion.choices[0].message.content || "{}";
-
   try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 300,
+      temperature: 0.7,
+    });
+
+    const raw = completion.choices[0].message.content || "{}";
     const parsed = JSON.parse(raw);
     return NextResponse.json(parsed);
   } catch {
-    return NextResponse.json({ error: "AI parse failed" }, { status: 500 });
+    return NextResponse.json({
+      predictedMood: 7,
+      trend: "stable",
+      insight: "Keep tracking your habits to get personalized insights!",
+      topSuggestion: "Try to complete all your habits today.",
+      streakRisk: "none",
+    });
   }
 }

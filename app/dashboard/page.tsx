@@ -5,6 +5,8 @@ import { connectDB } from "@/lib/mongodb";
 import Habit from "@/models/Habit";
 import HabitLog from "@/models/HabitLog";
 import HabitSection from "@/components/HabitSection";
+import MoodInput from "@/components/MoodInput";
+import AIInsightCard from "@/components/AIInsightCard";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -71,6 +73,10 @@ export default async function DashboardPage() {
           </div>
         </aside>
 
+              <MoodInput />
+              <div className="mt-4">
+                  <AIInsightCard/>
+              </div>
         {/* Main */}
         <main className="flex-1 p-6">
           <div className="flex items-center justify-between mb-6">

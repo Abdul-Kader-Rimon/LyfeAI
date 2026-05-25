@@ -13,18 +13,19 @@ export async function POST(req: NextRequest) {
   const { score, note } = await req.json();
   await connectDB();
 
-  // আজকে already entry আছে কিনা check করো
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   const existing = await MoodEntry.findOne({
     userId: session.user.email,
-    createdAt: { $gte: today },
+    createdAt: { $gte: today, $lt: tomorrow },
   });
 
   if (existing) {
     existing.score = score;
-    existing.note = note;
+    existing.note = note || "";
     await existing.save();
     return NextResponse.json(existing);
   }
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
   const entry = await MoodEntry.create({
     userId: session.user.email,
     score,
-    note,
+    note: note || "",
   });
 
   return NextResponse.json(entry, { status: 201 });
@@ -46,7 +47,6 @@ export async function GET() {
 
   await connectDB();
 
-  // Last 30 দিনের mood data
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
