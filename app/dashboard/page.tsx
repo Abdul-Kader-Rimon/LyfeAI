@@ -34,7 +34,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
+      <div className="flex ">
         {/* Sidebar */}
         <aside className="w-48 min-h-screen bg-white border-r border-gray-100 flex flex-col p-3">
           <div className="flex items-center gap-2 px-2 py-4 mb-2">
@@ -73,12 +73,8 @@ export default async function DashboardPage() {
           </div>
         </aside>
 
-              <MoodInput />
-              <div className="mt-4">
-                  <AIInsightCard/>
-              </div>
         {/* Main */}
-        <main className="flex-1 p-6">
+        <main className="flex-1  p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-xl font-medium text-gray-900">
@@ -124,6 +120,11 @@ export default async function DashboardPage() {
             habits={JSON.parse(JSON.stringify(habits))}
             completedIds={completedIds}
           />
+
+          <MoodInput />
+          <div className="mt-4">
+            <AIInsightCard />
+          </div>
         </main>
       </div>
     </div>
